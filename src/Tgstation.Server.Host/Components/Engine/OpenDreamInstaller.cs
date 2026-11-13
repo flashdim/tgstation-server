@@ -156,7 +156,7 @@ namespace Tgstation.Server.Host.Components.Engine
 					null,
 					null,
 					progressSection1,
-					true,
+					false,
 					cancellationToken);
 			}
 			catch
@@ -181,6 +181,8 @@ namespace Tgstation.Server.Host.Components.Engine
 						false,
 						cancellationToken);
 				}
+
+				await EnsureOpenDreamSubmodulesInitialized(repo, cancellationToken);
 
 				progressSection1.Dispose();
 				progressSection1 = null;
@@ -387,6 +389,35 @@ namespace Tgstation.Server.Host.Components.Engine
 				BinDir,
 				InstallationCompilerDirectory,
 				$"DMCompiler{DllExtension}");
+		}
+
+		/// <summary>
+		/// Work around LibGit2Sharp's recursive submodule bug for OpenDream.
+		/// </summary>
+		/// <param name="repo">The <see cref="IRepository"/> to initialize submodules in.</param>
+		/// <param name="cancellationToken">The <see cref="CancellationToken"/> for the operation.</param>
+		/// <returns>A <see cref="ValueTask"/> representing the running operation.</returns>
+		async ValueTask EnsureOpenDreamSubmodulesInitialized(IRepository repo, CancellationToken cancellationToken)
+		{
+			var repoPath = repo.RepositoryPath;
+			Logger.LogTrace("Initializing OpenDream submodules via git CLI at {path}...", repoPath);
+
+			using var submoduleProcess = await ProcessExecutor.LaunchProcess(
+				"git",
+				repoPath,
+				"submodule sync --recursive && git submodule update --init --recursive --force",
+				cancellationToken,
+				null,
+				null,
+				true,
+				true);
+
+			using (cancellationToken.Register(() => submoduleProcess.Terminate()))
+			{
+				var exitCode = await submoduleProcess.Lifetime;
+				if (exitCode != 0)
+					throw new JobException("OpenDream submodule initialization failed!");
+			}
 		}
 	}
 }

@@ -33,6 +33,11 @@ namespace Tgstation.Server.Host.Components.Repository
 		Uri Origin { get; }
 
 		/// <summary>
+		/// The path to the repository working directory on disk.
+		/// </summary>
+		string RepositoryPath { get; }
+
+		/// <summary>
 		/// Checks if a given <paramref name="committish"/> is a sha.
 		/// </summary>
 		/// <param name="committish">The git object to check.</param>
