@@ -402,7 +402,7 @@ namespace Tgstation.Server.Host.Components.Engine
 			var repoPath = repo.RepositoryPath;
 			Logger.LogTrace("Initializing OpenDream submodules via git CLI at {path}...", repoPath);
 
-			using var submoduleProcess = await ProcessExecutor.LaunchProcess(
+			await using var submoduleProcess = await ProcessExecutor.LaunchProcess(
 				"git",
 				repoPath,
 				"submodule sync --recursive && git submodule update --init --recursive --force",
