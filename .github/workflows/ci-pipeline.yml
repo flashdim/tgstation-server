@@ -14,7 +14,7 @@
 # - Deploys GraphQL API schema.graphql [GQLDeploy] (dev/master)
 # - Deploys tgstation-server [TGSDeploy] (master)
 #   - GitHub Releases: https://github.com/tgstation/tgstation-server/releases
-#   - Docker: https://hub.docker.com/r/tgstation/server
+#   - Docker: https://hub.docker.com/r/flashdim/server
 #   - apt repo: https://github.com/tgstation/tgstation-ppa
 #   - winget: https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/Tgstation/Server
 name: CI Pipeline
