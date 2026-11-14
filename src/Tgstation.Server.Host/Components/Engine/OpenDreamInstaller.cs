@@ -284,6 +284,7 @@ namespace Tgstation.Server.Host.Components.Engine
 				{
 					var shortenedDeployPath = IOManager.ConcatPath(shortenedPath, DeployDir);
 					var generalConfig = GeneralConfigurationOptions.CurrentValue;
+
 					// The package tool launches additional dotnet builds that must inherit this setting.
 					var existingWarningsNotAsErrors = Environment.GetEnvironmentVariable("WarningsNotAsErrors");
 					var warningsNotAsErrors = String.IsNullOrEmpty(existingWarningsNotAsErrors)
