@@ -200,7 +200,7 @@ namespace Tgstation.Server.Host.Components.Engine
 						cancellationToken);
 				}
 
-                await EnsureOpenDreamSubmodulesInitialized(repo, cancellationToken);
+				await EnsureOpenDreamSubmodulesInitialized(repo, cancellationToken);
 
 				if (!await repo.CommittishIsParent("tgs-min-compat", cancellationToken))
 					throw new JobException(ErrorCode.OpenDreamTooOld);
@@ -399,44 +399,44 @@ namespace Tgstation.Server.Host.Components.Engine
 		/// <returns>A <see cref="ValueTask"/> representing the running operation.</returns>
 		async ValueTask EnsureOpenDreamSubmodulesInitialized(IRepository repo, CancellationToken cancellationToken)
 		{
-		    var repoPath = repo.RepositoryPath;
-		    Logger.LogTrace("Initializing OpenDream submodules via git CLI at {path}...", repoPath);
-		
-		    using (var syncProcess = await ProcessExecutor.LaunchProcess(
-		        "git",
-		        repoPath,
-		        "submodule sync --recursive",
-		        cancellationToken,
-		        null,
-		        null,
-		        true,
-		        true))
-		    {
-		        using (cancellationToken.Register(() => syncProcess.Terminate()))
-		        {
-		            var exitCode = await syncProcess.Lifetime;
-		            if (exitCode != 0)
-		                throw new JobException("OpenDream submodule sync failed!");
-		        }
-		    }
-		
-		    using (var updateProcess = await ProcessExecutor.LaunchProcess(
-		        "git",
-		        repoPath,
-		        "submodule update --init --recursive --force",
-		        cancellationToken,
-		        null,
-		        null,
-		        true,
-		        true))
-		    {
-		        using (cancellationToken.Register(() => updateProcess.Terminate()))
-		        {
-		            var exitCode = await updateProcess.Lifetime;
-		            if (exitCode != 0)
-		                throw new JobException("OpenDream submodule initialization failed!");
-		        }
-		    }
+			var repoPath = repo.RepositoryPath;
+			Logger.LogTrace("Initializing OpenDream submodules via git CLI at {path}...", repoPath);
+
+			await using (var syncProcess = await ProcessExecutor.LaunchProcess(
+				"git",
+				repoPath,
+				"submodule sync --recursive",
+				cancellationToken,
+				null,
+				null,
+				true,
+				true))
+			{
+				await using (cancellationToken.Register(() => syncProcess.Terminate()))
+				{
+					var exitCode = await syncProcess.Lifetime;
+					if (exitCode != 0)
+						throw new JobException("OpenDream submodule sync failed!");
+				}
+			}
+
+			await using (var updateProcess = await ProcessExecutor.LaunchProcess(
+				"git",
+				repoPath,
+				"submodule update --init --recursive --force",
+				cancellationToken,
+				null,
+				null,
+				true,
+				true))
+			{
+				using (cancellationToken.Register(() => updateProcess.Terminate()))
+				{
+					var exitCode = await updateProcess.Lifetime;
+					if (exitCode != 0)
+						throw new JobException("OpenDream submodule initialization failed!");
+				}
+			}
 		}
 	}
 }
