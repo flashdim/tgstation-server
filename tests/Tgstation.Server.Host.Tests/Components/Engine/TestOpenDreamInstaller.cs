@@ -1,4 +1,7 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,6 +34,54 @@ namespace Tgstation.Server.Host.Components.Engine.Tests
 		public async Task TestDownloadsCloneRepositoryIfItDoesntExists()
 		{
 			await RepoDownloadTest(true);
+		}
+
+		[TestMethod]
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task TestBuildPassesWarningPolicyToNestedProcesses(bool suppressOutput)
+		{
+			var ioManager = new Mock<IIOManager>();
+			ioManager.Setup(x => x.ConcatPath(It.IsNotNull<string[]>())).Returns<string[]>(Path.Combine);
+			ioManager.Setup(x => x.DirectoryExists(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+			ioManager.Setup(x => x.FileExists(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+			var process = new Mock<IProcess>();
+			process.SetupGet(x => x.Lifetime).Returns(Task.FromResult<int?>(1));
+			process.Setup(x => x.GetCombinedOutput(It.IsAny<CancellationToken>())).ReturnsAsync(String.Empty);
+			var executor = new Mock<IProcessExecutor>();
+			var existingWarnings = Environment.GetEnvironmentVariable("WarningsNotAsErrors");
+			var expectedWarnings = String.IsNullOrEmpty(existingWarnings) ? "NU1508" : $"{existingWarnings};NU1508";
+			executor.Setup(x => x.LaunchProcess(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.Is<string>(args => args.Contains("run -c Release --project OpenDreamPackageTool")),
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyDictionary<string, string>>(env => env["WarningsNotAsErrors"] == expectedWarnings),
+				null,
+				!suppressOutput,
+				true,
+				false)).ReturnsAsync(process.Object).Verifiable();
+
+			var generalOptions = new Mock<IOptionsMonitor<GeneralConfiguration>>();
+			generalOptions.SetupGet(x => x.CurrentValue).Returns(new GeneralConfiguration { OpenDreamSuppressInstallOutput = suppressOutput });
+			var installer = new OpenDreamInstaller(
+				ioManager.Object,
+				Mock.Of<ILogger<OpenDreamInstaller>>(),
+				Mock.Of<IPlatformIdentifier>(),
+				executor.Object,
+				Mock.Of<IRepositoryManager>(),
+				Mock.Of<IAsyncDelayer>(),
+				Mock.Of<IHttpClientFactory>(),
+				generalOptions.Object,
+				Mock.Of<IOptionsMonitor<SessionConfiguration>>());
+
+			await Assert.ThrowsExactlyAsync<JobException>(() => installer.Install(
+				new EngineVersion { Engine = EngineType.OpenDream },
+				"install",
+				false,
+				CancellationToken.None).AsTask());
+			executor.Verify();
 		}
 
 		static async Task RepoDownloadTest(bool needsClone)

@@ -145,7 +145,7 @@ namespace Tgstation.Server.Host.System
 				handle.StartInfo.Arguments = arguments;
 				if (environment != null)
 					foreach (var kvp in environment)
-						handle.StartInfo.Environment.Add(kvp!);
+						handle.StartInfo.Environment[kvp.Key] = kvp.Value;
 
 				handle.StartInfo.WorkingDirectory = workingDirectory;
 
