@@ -52,9 +52,12 @@ RUN dotnet publish -c Release -o /app/lib/Default \
 	&& build/RemoveUnsupportedRuntimes.sh /app/lib/Default \
 	&& mv /app/lib/Default/appsettings* /app
 
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS opendream-sdk
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 
 COPY --from=build /usr/share/dotnet/ /usr/share/dotnet/
+COPY --from=opendream-sdk /usr/share/dotnet/ /usr/share/dotnet/
 
 #needed for byond, curl for healthchecks
 RUN dpkg --add-architecture i386 \

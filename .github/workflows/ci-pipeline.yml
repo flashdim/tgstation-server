@@ -524,7 +524,25 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build Docker Image # Name checked in rerunFlakyTests.js
-        run: docker build . -f build/Dockerfile
+        run: docker build . -f build/Dockerfile -t tgs-ci
+
+      - name: Check container SDKs and runtime
+        run: |
+          docker run --rm --entrypoint sh tgs-ci -ec '
+            dotnet --list-sdks | grep -E "^8[.]0[.]"
+            dotnet --list-runtimes | grep -E "^Microsoft[.]AspNetCore[.]App 8[.]0[.]"
+            mkdir /tmp/sdk-check
+            printf "%s\n" '"'"'{"sdk":{"version":"10.0.100","rollForward":"latestFeature"}}'"'"' > /tmp/sdk-check/global.json
+            cd /tmp/sdk-check
+            dotnet --version | grep -E "^10[.]0[.]"
+            dotnet new console --framework net10.0 --no-restore
+            dotnet run -c Release | grep -F "Hello, World!"
+            mkdir /tmp/sdk8-check
+            cd /tmp/sdk8-check
+            printf "%s\n" '"'"'{"sdk":{"version":"8.0.100","rollForward":"latestFeature"}}'"'"' > global.json
+            dotnet new console --framework net8.0 --no-restore
+            dotnet run -c Release | grep -F "Hello, World!"
+          '
 
   linux-unit-tests:
     name: Linux Tests
