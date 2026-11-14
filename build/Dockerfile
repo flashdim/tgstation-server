@@ -16,7 +16,6 @@ RUN . $NVM_DIR/nvm.sh \
 	&& apt-get update \
 	&& apt-get install -y \
 		dos2unix \
-		git \
 		libgdiplus \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& corepack enable
@@ -59,6 +58,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 RUN dpkg --add-architecture i386 \
 	&& apt-get update \
 	&& apt-get install -y \
+		git \
 		gcc-multilib \
 		gdb \
 		curl \
