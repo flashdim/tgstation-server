@@ -54,7 +54,7 @@ RUN dotnet publish -c Release -o /app/lib/Default \
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 
-COPY --from=mcr.microsoft.com/dotnet/sdk:10.0-bookworm-slim /usr/share/dotnet/ /usr/share/dotnet/
+COPY --from=build /usr/share/dotnet/ /usr/share/dotnet/
 
 #needed for byond, curl for healthchecks
 RUN dpkg --add-architecture i386 \
