@@ -286,7 +286,7 @@ namespace Tgstation.Server.Host.Components.Engine
 					await using var buildProcess = await ProcessExecutor.LaunchProcess(
 						dotnetPath,
 						shortenedPath,
-						$"run -c Release --project OpenDreamPackageTool -- --tgs -o {shortenedDeployPath}",
+						$"run -c Release --project OpenDreamPackageTool -p:WarningsNotAsErrors=NU1508 -- --tgs -o {shortenedDeployPath}",
 						cancellationToken,
 						null,
 						null,
