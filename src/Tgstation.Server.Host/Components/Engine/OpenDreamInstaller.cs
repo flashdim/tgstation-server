@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -283,15 +284,20 @@ namespace Tgstation.Server.Host.Components.Engine
 				{
 					var shortenedDeployPath = IOManager.ConcatPath(shortenedPath, DeployDir);
 					var generalConfig = GeneralConfigurationOptions.CurrentValue;
+					// The package tool launches additional dotnet builds that must inherit this setting.
+					var existingWarningsNotAsErrors = Environment.GetEnvironmentVariable("WarningsNotAsErrors");
+					var warningsNotAsErrors = String.IsNullOrEmpty(existingWarningsNotAsErrors)
+						? "NU1508"
+						: $"{existingWarningsNotAsErrors};NU1508";
 					await using var buildProcess = await ProcessExecutor.LaunchProcess(
 						dotnetPath,
 						shortenedPath,
-						$"run -c Release --project OpenDreamPackageTool -p:WarningsNotAsErrors=NU1508 -- --tgs -o {shortenedDeployPath}",
+						$"run -c Release --project OpenDreamPackageTool -- --tgs -o {shortenedDeployPath}",
 						cancellationToken,
-						null,
+						new Dictionary<string, string> { ["WarningsNotAsErrors"] = warningsNotAsErrors },
 						null,
 						!generalConfig.OpenDreamSuppressInstallOutput,
-						!generalConfig.OpenDreamSuppressInstallOutput);
+						true);
 
 					if (deploymentPipelineProcesses && SessionConfigurationOptions.CurrentValue.LowPriorityDeploymentProcesses)
 						buildProcess.AdjustPriority(false);
